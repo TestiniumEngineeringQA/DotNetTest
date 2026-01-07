@@ -1,24 +1,10 @@
-﻿using LivingDoc.Dtos;
-using NUnit.Framework;
+﻿using Newtonsoft.Json;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
-using System.Reflection;
-using System.Xml.Linq;
 using TechTalk.SpecFlow;
-using System.IO;
-using System.Threading;
 using DevProject.Models;
-using System;
-using System.Threading;
-using System.Net;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml;
-using System.Text;
-using System.Security;
-using System.Security.Permissions;
+using System.Reflection;
 
 
 namespace DevProject.StepDefinitions
@@ -27,91 +13,67 @@ namespace DevProject.StepDefinitions
     public class BaseTest
     {
 
-        public static string BASE_PATH_CONSTANTS = "";
-        public RemoteWebDriver driver = null;
-        DesiredCapabilities capabilities;
-        public bool isRemoteDriver = false;
-        private readonly string chrome = "chrome";
-
-        public Dictionary<string, KeyValuePair<string, string>> keyValuePairs;
-        private static string BASE_EXT = "*.json";
+        public static string BasePathConstants = "";
+        public IWebDriver? Driver;
+        public bool IsRemoteDriver;
+        private readonly string _chrome = "chrome";
+        public ChromeOptions ChromeOptions = new ChromeOptions();
+        public Dictionary<string, KeyValuePair<string, string>> KeyValuePairs = new();
+        private static string _baseExt = "*.json";
 
 
         [BeforeScenario]
-        public void setUp()
+        public void SetUp()
         {
-
-
+            ChromeOptions.AddArgument("--start-maximized");
             if (Environment.GetEnvironmentVariable("key") == null)
             {
-
                 Console.WriteLine("Test will be running in local");
-                BASE_PATH_CONSTANTS = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"../../../") + "Constants";
+                BasePathConstants = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, @"../../../") + "Constants";
             }
             else
             {
                 Console.WriteLine("Test will be running in Testinium");
-
-
-                BASE_PATH_CONSTANTS = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"../demospecflow/DevProject/") + "Constants";
-
+                BasePathConstants = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, @"../demospecflow/DevProject/") + "Constants";
             }
-
         }
-
-
-
-
         [Given(@"Wake up the driver")]
-        public void driverAwake()
+        public void DriverAwake()
         {
             if (Environment.GetEnvironmentVariable("key") == null)
             {
                 Console.WriteLine("key null ChromeDriver is waking up");
                 string workingDirectory = Environment.CurrentDirectory;
-                string projectDirectory = Directory.GetParent(workingDirectory).Parent.Parent.FullName;
-                string driverPath = projectDirectory + "\\Drivers";
-                // Bonigare C:\Users\testinium\Documents\ProjectsTestSolutions\SpecflowProject\demospecflow\DevProject\Documents\OzanDemoWillRemove\DevProject\Drivers\chromedriver.exe does not exist
-                //C:\Users\testinium\Documents\ProjectsTestSolutions\SpecflowProject\demospecflow\DevProject\Drivers
+                var parent1 = Directory.GetParent(workingDirectory);
+                var parent2 = parent1?.Parent;
+                var parent3 = parent2?.Parent;
+                string projectDirectory = parent3?.FullName ?? string.Empty;
+                string driverPath = projectDirectory + "/Drivers";
                 ChromeOptions option1 = new ChromeOptions();
                 option1.AddArguments("disable-popup-blocking");
                 option1.AddArguments("ignore-certificate-errors");
                 option1.AddArguments("--ignore-ssl-errors=yes");
                 option1.AddArguments("start-maximized");
-                driver = new ChromeDriver(driverPath, option1);
-                isRemoteDriver = false;
+                Driver = new ChromeDriver(driverPath, option1);
+                IsRemoteDriver = false;
                 Console.WriteLine("ChromeDriver woke");
-
             }
             else
             {
                 Console.WriteLine("Remote ChromeDriver is waking up");
-
-                ChromeOptions options = new ChromeOptions();
-                options.AddArguments("disable-popup-blocking");
-                options.AddArguments("ignore-certificate-errors");
-                options.AddArguments("--ignore-ssl-errors=yes");
+                ChromeOptions.AddArguments("disable-popup-blocking");
+                ChromeOptions.AddArguments("ignore-certificate-errors");
+                ChromeOptions.AddArguments("--ignore-ssl-errors=yes");
                 Console.WriteLine("options added");
-
-                capabilities = (DesiredCapabilities)options.ToCapabilities();
-                capabilities.SetCapability("testinium:browserName", chrome);
-                Console.WriteLine(chrome);
-                capabilities.SetCapability("testinium:key", Environment.GetEnvironmentVariable("key"));
-                Console.WriteLine(TestContext.Parameters.Get("key"));
+                ChromeOptions.AddAdditionalOption("testinium:browserName", _chrome);
+                ChromeOptions.AddAdditionalOption("testinium:key", Environment.GetEnvironmentVariable("key"));
+                Console.WriteLine(_chrome);
                 Console.WriteLine(Environment.GetEnvironmentVariable("key"));
-                //capabilities.SetCapability("platformName", "Windows 10");
-                //  capabilities.SetCapability("acceptInsecureCerts", true);
                 Console.WriteLine("capability added");
-
-               // driver = new RemoteWebDriver(new Uri("http://10.1.33.193:4444/wd/hub"), capabilities, TimeSpan.FromSeconds(60));
-                 //driver = new RemoteWebDriver(new Uri("https://hubdev.testinium.com/wd/hub"), capabilities, TimeSpan.FromSeconds(60));
-              // driver = new RemoteWebDriver(new Uri("http://localhost:4444/wd/hub"), capabilities, TimeSpan.FromSeconds(60));
-               driver = new RemoteWebDriver(new Uri("http://host.docker.internal:4444/wd/hub"), capabilities, TimeSpan.FromSeconds(60));
-                isRemoteDriver = true;
+                Driver = new RemoteWebDriver(new Uri("http://host.docker.internal:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
+                IsRemoteDriver = true;
                 Console.WriteLine("ChromeDriver woke");
-
             }
-
         }
 
 
@@ -122,9 +84,9 @@ namespace DevProject.StepDefinitions
 
             try
             {
-                if (null != driver)
+                if (Driver != null)
                 {
-                    driver.Quit();
+                    Driver.Quit();
                     Console.WriteLine("Driver Quited After Scenario");
                 }
             }
@@ -140,15 +102,15 @@ namespace DevProject.StepDefinitions
 
 
         [Given(@"Get (.*) dictionary folders json")]
-        public void createDictionary(string key)
+        public void CreateDictionary(string key)
         {
-            keyValuePairs = GetDictionary(key);
+            KeyValuePairs = GetDictionary(key);
 
         }
 
 
         [Given(@"Add these two number (.*) ,(.*)")]
-        public void createDictionary(string key, string key2)
+        public void CreateDictionary(string key, string key2)
         {
 
 
@@ -161,7 +123,7 @@ namespace DevProject.StepDefinitions
 
         //
         [Given(@"Connect to DB via (.*) connectionString")]
-        public void connecToOutDB(string connectionString)
+        public void ConnecToOutDb(string connectionString)
         {
 
             //DB connection functions here
@@ -173,22 +135,19 @@ namespace DevProject.StepDefinitions
         public Dictionary<string, KeyValuePair<string, string>> GetDictionary(string key)
         {
             Dictionary<string, KeyValuePair<string, string>> dic = new Dictionary<string, KeyValuePair<string, string>>();
-            var txtFiles = Directory.EnumerateFiles(BASE_PATH_CONSTANTS + "/" + key, BASE_EXT);
+            var txtFiles = Directory.EnumerateFiles(BasePathConstants + "/" + key, _baseExt);
             foreach (string currentFile in txtFiles)
             {
                 var json = File.ReadAllText(currentFile);
-                Dictionary<string, Element> d = JsonConvert.DeserializeObject<IEnumerable<Element>>(json).
-                 Select(p => (Id: p.key, Record: p)).
-                 ToDictionary(t => t.Id, t => t.Record);
-                //Console.WriteLine("Okunan dosya: " + currentFile + " element sayısı: " + d.Count);
-                foreach (var item in d)
+                List<Element>? elements = JsonConvert.DeserializeObject<List<Element>>(json);
+                if (elements != null)
                 {
-                    dic.Add(item.Key.ToString(), new KeyValuePair<string, string>(item.Value.type, item.Value.value));
-                    //Console.WriteLine("Sözlüğe eklenen element -> Key:" + item.Key + " type: " + item.Value.type + " value: " + item.Value.value);
+                    foreach (var item in elements)
+                    {
+                        dic.Add(item.key, new KeyValuePair<string, string>(item.type, item.value));
+                    }
                 }
-
             }
-
             Console.WriteLine("Total element count in the dictionary" + dic.Count);
             return dic;
         }

@@ -1,18 +1,12 @@
-﻿using DevProject.StepDefinitions;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using TechTalk.SpecFlow;
-using System.IO;
-using System;
+using DevProject.Configurations;
+using NUnit.Framework;
 using System.Threading;
 using System.Linq;
-using System.Reflection;
-using NUnit.Framework;
-using DevProject.Configurations;
-using System.Collections.Generic;
-using System.Drawing.Drawing2D;
-using System.Security.Permissions;
+using DevProject.StepDefinitions;
 
 
 namespace DevProject
@@ -22,9 +16,10 @@ namespace DevProject
     {
 
 
-        public RemoteWebDriver driver;
-        private BaseTest _baseTest;
-        private IJavaScriptExecutor javaScriptExecutor;
+        public BaseTest _baseTest;
+        public IWebDriver? Driver => _baseTest.Driver;
+        public Dictionary<string, KeyValuePair<string, string>> KeyValuePairs => _baseTest.KeyValuePairs;
+        private IJavaScriptExecutor? _javaScriptExecutor;
         public BasePage(BaseTest baseTest)
         {
 
@@ -33,29 +28,19 @@ namespace DevProject
 
 
         [Given(@"Click (.*) Element By (.*)")]
-        public void clickElement(string key, string type)
+        public void ClickElement(string key, string type)
         {
-            IWebElement textAreaElement = null;
-
-
-
+            if (Driver == null)
+                throw new InvalidOperationException("Driver is not initialized.");
+            IWebElement textAreaElement;
             if ("id".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementById(key);
-            }
+                textAreaElement = Driver.FindElement(By.Id(key));
             else if ("name".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementByName(key);
-            }
+                textAreaElement = Driver.FindElement(By.Name(key));
             else if ("xpath".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementByXPath(key);
-            }
+                textAreaElement = Driver.FindElement(By.XPath(key));
             else
-            {
-                Console.WriteLine("The type value of element is not valid");
-            }
-
+                throw new ArgumentException("The type value of element is not valid");
             textAreaElement.Click();
 
 
@@ -76,68 +61,42 @@ namespace DevProject
         [Given(@"Driver Navigate to (.*)")]
         public void navigate(string key)
         {
-            _baseTest.driver.Navigate().GoToUrl(key);
+            Driver?.Navigate().GoToUrl(key);
         }
 
         [Given(@"Send (.*) key to (.*) type (.*) element")]
-        public void sendKeys( string text, string type, string key)
+        public void SendKeys(string text, string type, string key)
         {
-
-
-            IWebElement textAreaElement=null;
-
-
-        if ("id".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementById(key);
-            }
+            if (Driver == null)
+                throw new InvalidOperationException("Driver is not initialized.");
+            IWebElement textAreaElement;
+            if ("id".Equals(type))
+                textAreaElement = Driver.FindElement(By.Id(key));
             else if ("name".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementByName(key);
-            }
+                textAreaElement = Driver.FindElement(By.Name(key));
             else if ("xpath".Equals(type))
-            {
-                textAreaElement = _baseTest.driver.FindElementByXPath(key);
-            }
+                textAreaElement = Driver.FindElement(By.XPath(key));
             else
-            {
-                Console.WriteLine("The type value of element is not valid");
-            }
-
+                throw new ArgumentException("The type value of element is not valid");
             textAreaElement.SendKeys(text);
-
         }
 
 
         [Given(@"Check (.*) type (.*) element is equasls (.*)")]
-        public void GivenCheckİf(string key , string type , string assertKey)
+        public void GivenCheckIf(string key, string type, string assertKey)
         {
-
-            IWebElement myErorrMessage = null;
-
-
+            if (Driver == null)
+                throw new InvalidOperationException("Driver is not initialized.");
+            IWebElement errorMessage;
             if ("id".Equals(type))
-            {
-                myErorrMessage = _baseTest.driver.FindElementById(key);
-            }
+                errorMessage = Driver.FindElement(By.Id(key));
             else if ("name".Equals(type))
-            {
-                myErorrMessage = _baseTest.driver.FindElementByName(key);
-            }
+                errorMessage = Driver.FindElement(By.Name(key));
             else if ("xpath".Equals(type))
-            {
-                myErorrMessage = _baseTest.driver.FindElementByXPath(key);
-            }
+                errorMessage = Driver.FindElement(By.XPath(key));
             else
-            {
-                Console.WriteLine("The type value of element is not valid");
-            }
-
-
-            Assert.AreEqual(assertKey, myErorrMessage.Text.Trim());
-
-
-
+                throw new ArgumentException("The type value of element is not valid");
+            Assert.AreEqual(assertKey, errorMessage.Text.Trim());
         }
 
 
@@ -151,7 +110,7 @@ namespace DevProject
         //==================================================================NewSteps=====================================================================
         public void goToUrl(string uri)
         {
-            _baseTest.driver.Navigate().GoToUrl(uri);
+            Driver?.Navigate().GoToUrl(uri);
 
         }
         public void clickBP(string key)
@@ -177,7 +136,7 @@ namespace DevProject
 
         public void fillPasswordBox(string key, string passId)
         {
-            Console.WriteLine(_baseTest.keyValuePairs[passId].Value);
+            Console.WriteLine(KeyValuePairs[passId].Value);
            
         }
 
@@ -193,7 +152,7 @@ namespace DevProject
 
         public void fileUpload()
         {
-            var allowsDetection = _baseTest.driver as IAllowsFileDetection;
+            var allowsDetection = Driver as IAllowsFileDetection;
             if (allowsDetection != null)
             {
                 allowsDetection.FileDetector = new LocalFileDetector();
@@ -211,16 +170,16 @@ namespace DevProject
 
         public void browserMaximize()
         {
-            _baseTest.driver.Manage().Window.Maximize();
+            Driver?.Manage().Window.Maximize();
         }
         public void goBack()
         {
-            _baseTest.driver.Navigate().Back();
+            Driver?.Navigate().Back();
         }
 
         public void forward()
         {
-            _baseTest.driver.Navigate().Forward();
+            Driver?.Navigate().Forward();
         }
         public void leftPress(string key, string text)
         {
@@ -231,18 +190,18 @@ namespace DevProject
 
         public void refreshPage()
         {
-            _baseTest.driver.Navigate().Refresh();
+            Driver?.Navigate().Refresh();
         }
         public void switchToLastWindow()
 
         {
-            _baseTest.driver.SwitchTo().Window(_baseTest.driver.WindowHandles.Last());
+            Driver?.SwitchTo().Window(Driver.WindowHandles.Last());
         }
 
         public void pageContainsText(string text)
 
         {
-            Assert.IsTrue(_baseTest.driver.PageSource.Contains(text), "page contains " + text + " value");
+            Assert.IsTrue(Driver.PageSource.Contains(text), "page contains " + text + " value");
         }
 
         public void elementContainsText(string key, string text)
@@ -289,47 +248,48 @@ namespace DevProject
 
         public IWebElement findElement(string key)
         {
-            By by = generateElementBy(_baseTest.keyValuePairs[key].Key, _baseTest.keyValuePairs[key].Value);
-            WebDriverWait wait = new WebDriverWait(_baseTest.driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
-            IWebElement webElement = (IWebElement)wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(by));//
+            By by = generateElementBy(KeyValuePairs[key].Key, KeyValuePairs[key].Value);
+            WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
+            IWebElement webElement = wait.Until(driver => driver.FindElement(by));
             return webElement;
         }
         public IList<IWebElement> findElements(string key)
         {
-            By by = generateElementBy(_baseTest.keyValuePairs[key].Key, _baseTest.keyValuePairs[key].Value);
-            WebDriverWait wait = new WebDriverWait(_baseTest.driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
-            IList<IWebElement> webElements = wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(by));
+            By by = generateElementBy(KeyValuePairs[key].Key, KeyValuePairs[key].Value);
+            WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
+            IList<IWebElement> webElements = wait.Until(driver => driver.FindElements(by));
             return webElements;
         }
-
         public IWebElement findElementStale(string key)
         {
-            By by = generateElementBy(_baseTest.keyValuePairs[key].Key, _baseTest.keyValuePairs[key].Value);
-
-            DefaultWait<IWebDriver> wait = new DefaultWait<IWebDriver>(_baseTest.driver);
+            By by = generateElementBy(KeyValuePairs[key].Key, KeyValuePairs[key].Value);
+            DefaultWait<IWebDriver> wait = new DefaultWait<IWebDriver>(Driver);
             wait.Timeout = TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout());
             wait.PollingInterval = TimeSpan.FromMilliseconds(250);
             wait.IgnoreExceptionTypes(typeof(StaleElementReferenceException));
             wait.Message = "StaleElementReferenceException";
-            IWebElement webElement = wait.Until(ExpectedConditions.ElementToBeClickable(by));
+            IWebElement webElement = wait.Until(driver => {
+                var el = driver.FindElement(by);
+                return (el != null && el.Enabled && el.Displayed) ? el : null;
+            });
             return webElement;
         }
 
 
         public void scrollElement(IWebElement element)
         {
-            javaScriptExecutor = (IJavaScriptExecutor)_baseTest.driver;
-            javaScriptExecutor.ExecuteScript("arguments[0].scrollIntoView({ behaviour: 'smooth', block: 'center', inline: 'center'});", element);
+            _javaScriptExecutor = (IJavaScriptExecutor)Driver;
+            _javaScriptExecutor.ExecuteScript("arguments[0].scrollIntoView({ behaviour: 'smooth', block: 'center', inline: 'center'});", element);
         }
 
         public void clickJS(string key)
         {
-            By by = generateElementBy(_baseTest.keyValuePairs[key].Key, _baseTest.keyValuePairs[key].Value);
-            WebDriverWait wait = new WebDriverWait(_baseTest.driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
-            IWebElement webElement = wait.Until(ExpectedConditions.ElementExists(by));
+            By by = generateElementBy(KeyValuePairs[key].Key, KeyValuePairs[key].Value);
+            WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(AppConficReader.GetElementLoadTimeout()));
+            IWebElement webElement = wait.Until(driver => driver.FindElement(by));
             scrollElement(webElement);
-            javaScriptExecutor = (IJavaScriptExecutor)_baseTest.driver;
-            javaScriptExecutor.ExecuteScript("arguments[0].click();", webElement);
+            _javaScriptExecutor = (IJavaScriptExecutor)Driver;
+            _javaScriptExecutor.ExecuteScript("arguments[0].click();", webElement);
 
         }
 
@@ -443,7 +403,7 @@ namespace DevProject
         [Given(@"Driver Quit")]
         public void driverClose()
         {
-            _baseTest.driver.Quit();
+            Driver?.Quit();
             Console.WriteLine("Driver Quited");
         }
 
