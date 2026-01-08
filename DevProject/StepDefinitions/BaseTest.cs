@@ -70,7 +70,7 @@ namespace DevProject.StepDefinitions
                 Console.WriteLine(_chrome);
                 Console.WriteLine(Environment.GetEnvironmentVariable("key"));
                 Console.WriteLine("capability added");
-                Driver = new RemoteWebDriver(new Uri("http://host.docker.internal:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
+                Driver = new RemoteWebDriver(new Uri("http://172.25.1.12:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
                 IsRemoteDriver = true;
                 Console.WriteLine("ChromeDriver woke");
             }
