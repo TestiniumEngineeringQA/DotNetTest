@@ -79,7 +79,7 @@ namespace DevProject.StepDefinitions
        [Given(@"Click ""(.*)""")]
        public void GivenClick(string selector)
        {
-          driver.FindElement(By.CssSelector(selector)).Click();
+           throw new Exception("Fail olsun diye");
        }
 
 
