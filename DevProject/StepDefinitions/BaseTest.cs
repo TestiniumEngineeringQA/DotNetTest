@@ -76,6 +76,12 @@ namespace DevProject.StepDefinitions
             }
         }
 
+       [Given(@"Click ""(.*)""")]
+       public void GivenClick(string selector)
+       {
+          driver.FindElement(By.CssSelector(selector)).Click();
+       }
+
 
         [AfterScenario]
         public void AfterScenario()
