@@ -1,4 +1,5 @@
 ﻿Feature: Calculator
+ 
 @Deneme
 Scenario: Demo
 
@@ -6,6 +7,12 @@ Scenario: Demo
 	* Go to https://www.kitapyurdu.com/index.php?route=account/login Url
 	* Wait 3 seconds
 
+@Deneme2
+Scenario: Demo2
+
+	* Wake up the driver
+	* Go to https://www.kitapyurdu.com/index.php?route=account/login Url
+	* Wait 3 seconds
 
 @FailDemo
 Scenario: FailDemo
