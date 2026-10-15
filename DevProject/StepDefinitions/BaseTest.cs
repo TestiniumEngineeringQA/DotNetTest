@@ -71,8 +71,8 @@ namespace DevProject.StepDefinitions
                 Console.WriteLine(Environment.GetEnvironmentVariable("key"));
                 Console.WriteLine("capability added");
                 // Preprod Hub'ı
-                // Driver = new RemoteWebDriver(new Uri("http://172.25.1.12:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
-                Driver = new RemoteWebDriver(new Uri("http://172.25.1.159:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
+                Driver = new RemoteWebDriver(new Uri("http://172.25.1.12:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
+                //Driver = new RemoteWebDriver(new Uri("http://172.25.1.159:4444/wd/hub"), ChromeOptions.ToCapabilities(), TimeSpan.FromSeconds(60));
                 IsRemoteDriver = true;
                 Console.WriteLine("ChromeDriver woke");
             }
